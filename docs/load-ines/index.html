@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+      <meta http-equiv="X-UA-Compatible" content="IE=edge">
+      <meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+      <!-- Enable responsiveness on mobile devices-->
+      <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+
+      <title>bon-chi</title>
+
+      <!-- CSS -->
+      <link rel="stylesheet" href="https:&#x2F;&#x2F;bon-chi.github.io&#x2F;blog&#x2F;print.css" media="print">
+      <link rel="stylesheet" href="https:&#x2F;&#x2F;bon-chi.github.io&#x2F;blog&#x2F;poole.css">
+      <link rel="stylesheet" href="https:&#x2F;&#x2F;bon-chi.github.io&#x2F;blog&#x2F;hyde.css">
+      <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=PT+Sans:400,400italic,700|Abril+Fatface">
+
+      
+
+      
+      
+    </head>
+
+    <body class="theme-base-0c ">
+        
+            <div class="sidebar">
+                <div class="container sidebar-sticky">
+                    <div class="sidebar-about">
+                        
+                            <a href="https:&#x2F;&#x2F;bon-chi.github.io&#x2F;blog&#x2F;"><h1>bon-chi</h1></a>
+                            
+                            <p class="lead">bon-chi&#x27;s web log</p>
+                            
+                        
+                    </div>
+
+                    <ul class="sidebar-nav">
+                        
+                        
+                        
+                    </ul>
+                </div>
+            </div>
+        
+
+        <div class="content container">
+            
+<div class="post">
+  <h1 class="post-title">load iNES</h1>
+  <span class="post-date">2018-02-28</span>
+  <ul>
+    
+        <li>
+            <a href="https://bon-chi.github.io/blog/load-ines/#first-of-all">First of all</a>
+            
+        </li>
+    
+        <li>
+            <a href="https://bon-chi.github.io/blog/load-ines/#two-parts-of-ines">Two parts of iNES</a>
+            
+        </li>
+    
+        <li>
+            <a href="https://bon-chi.github.io/blog/load-ines/#prg">PRG_RAM and V_RAM</a>
+            
+        </li>
+    
+        <li>
+            <a href="https://bon-chi.github.io/blog/load-ines/#init-project">init project</a>
+            
+        </li>
+    
+        <li>
+            <a href="https://bon-chi.github.io/blog/load-ines/#nes-module">nes module</a>
+            
+                <ul>
+                    
+                        <li>
+                            <a href="https://bon-chi.github.io/blog/load-ines/#cpu">CPU</a>
+                        </li>
+                    
+                        <li>
+                            <a href="https://bon-chi.github.io/blog/load-ines/#ppu">PPU</a>
+                        </li>
+                    
+                        <li>
+                            <a href="https://bon-chi.github.io/blog/load-ines/#nes">NES</a>
+                        </li>
+                    
+                </ul>
+            
+        </li>
+    
+        <li>
+            <a href="https://bon-chi.github.io/blog/load-ines/#dump">dump</a>
+            
+        </li>
+    
+  </ul>
+  <h2 id="first-of-all"><a class="gutenberg-anchor" href="#first-of-all" aria-label="Anchor link for: first-of-all">🔗</a>
+First of all</h2>
+<p>NES is Nintendo Entertainment System a.k.a. 'ファミコン'.
+My goal is developing NES simulator using Rust language.
+Reference guide is <a href="http://wiki.nesdev.com/w/index.php/NES_reference_guide">here</a>.</p>
+<p>NES consists of some parts. For example CPU, PPU, APU and so on. I start from loading iNES file,  which is a format of NES binary programs. You can check iNES format <a href="http://wiki.nesdev.com/w/index.php/INES">here</a>.</p>
+<h2 id="two-parts-of-ines"><a class="gutenberg-anchor" href="#two-parts-of-ines" aria-label="Anchor link for: two-parts-of-ines">🔗</a>
+Two parts of iNES</h2>
+<p>iNES have two parts. PRG_ROM and CHR_ROM. PRG_ROM is for game logic and CHR_ROM is for graphic. When iNES is loaded, PRG_RAM load PRG_ROM data and V_RAM load CHR_ROM.</p>
+<h2 id="prg"><a class="gutenberg-anchor" href="#prg" aria-label="Anchor link for: prg">🔗</a>
+PRG_RAM and V_RAM</h2>
+<p>PRG_RAM and V_RAM has 2KB memory.</p>
+<h2 id="init-project"><a class="gutenberg-anchor" href="#init-project" aria-label="Anchor link for: init-project">🔗</a>
+init project</h2>
+<pre style="background-color:#2b303b">
+<span style="background-color:#2b303b;color:#c0c5ce;">% cargo init --bin nes
+</span><span style="background-color:#2b303b;color:#c0c5ce;">% cd nes
+</span></pre><h2 id="nes-module"><a class="gutenberg-anchor" href="#nes-module" aria-label="Anchor link for: nes-module">🔗</a>
+nes module</h2>
+<p>This is the today's directory structure.</p>
+<pre style="background-color:#2b303b">
+<span style="background-color:#2b303b;color:#c0c5ce;">% tree
+</span><span style="background-color:#2b303b;color:#c0c5ce;">.
+</span><span style="background-color:#2b303b;color:#c0c5ce;">├── lib.rs
+</span><span style="background-color:#2b303b;color:#c0c5ce;">├── main.rs
+</span><span style="background-color:#2b303b;color:#c0c5ce;">└── nes
+</span><span style="background-color:#2b303b;color:#c0c5ce;">    </span><span style="background-color:#2b303b;color:#c0c5ce;">├── cpu
+</span><span style="background-color:#2b303b;color:#c0c5ce;">    </span><span style="background-color:#2b303b;color:#c0c5ce;">│   └── mod.rs
+</span><span style="background-color:#2b303b;color:#c0c5ce;">    </span><span style="background-color:#2b303b;color:#c0c5ce;">├── mod.rs
+</span><span style="background-color:#2b303b;color:#c0c5ce;">    </span><span style="background-color:#2b303b;color:#c0c5ce;">└── ppu
+</span><span style="background-color:#2b303b;color:#c0c5ce;">        </span><span style="background-color:#2b303b;color:#c0c5ce;">└── mod.rs
+</span></pre><h3 id="cpu"><a class="gutenberg-anchor" href="#cpu" aria-label="Anchor link for: cpu">🔗</a>
+CPU</h3>
+<p><code>src/nes/cpu/mod.rs</code></p>
+<pre style="background-color:#2b303b">
+<span style="background-color:#2b303b;color:#65737e;">/// [CPU](http://wiki.nesdev.com/w/index.php/CPU)
+</span><span style="background-color:#2b303b;color:#b48ead;">pub struct </span><span style="background-color:#2b303b;color:#c0c5ce;">Cpu {
+</span><span style="background-color:#2b303b;color:#c0c5ce;">    </span><span style="background-color:#2b303b;color:#bf616a;">prg_ram</span><span style="background-color:#2b303b;color:#c0c5ce;">: PrgRam,
+</span><span style="background-color:#2b303b;color:#c0c5ce;">}
+</span><span style="background-color:#2b303b;color:#c0c5ce;">
+</span><span style="background-color:#2b303b;color:#b48ead;">impl </span><span style="background-color:#2b303b;color:#c0c5ce;">Cpu {
+</span><span style="background-color:#2b303b;color:#c0c5ce;">    </span><span style="background-color:#2b303b;color:#b48ead;">pub fn </span><span style="background-color:#2b303b;color:#8fa1b3;">new</span><span style="background-color:#2b303b;color:#c0c5ce;">(</span><span style="background-color:#2b303b;color:#bf616a;">prg_ram</span><span style="background-color:#2b303b;color:#c0c5ce;">: PrgRam) -&gt; Cpu {
+</span><span style="background-color:#2b303b;color:#c0c5ce;">        </span><span style="background-color:#2b303b;color:#c0c5ce;">Cpu { prg_ram }
+</span><span style="background-color:#2b303b;color:#c0c5ce;">    </span><span style="background-color:#2b303b;color:#c0c5ce;">}
+</span><span style="background-color:#2b303b;color:#c0c5ce;">}
+</span><span style="background-color:#2b303b;color:#c0c5ce;">
+</span><span style="background-color:#2b303b;color:#65737e;">/// [CPU memory](http://wiki.nesdev.com/w/index.php/CPU_memory_map)
+</span><span style="background-color:#2b303b;color:#65737e;">/// RAM is 2KB.
+</span><span style="background-color:#2b303b;color:#b48ead;">pub struct </span><span style="background-color:#2b303b;color:#c0c5ce;">PrgRam {
+</span><span style="background-color:#2b303b;color:#c0c5ce;">    </span><span style="background-color:#2b303b;color:#bf616a;">memory</span><span style="background-color:#2b303b;color:#c0c5ce;">: Box&lt;[</span><span style="background-color:#2b303b;color:#b48ead;">u8</span><span style="background-color:#2b303b;color:#c0c5ce;">; </span><span style="background-color:#2b303b;color:#d08770;">0xFFFF</span><span style="background-color:#2b303b;color:#c0c5ce;">]&gt;,
+</span><span style="background-color:#2b303b;color:#c0c5ce;">    </span><span style="background-color:#2b303b;color:#bf616a;">v_ram</span><span style="background-color:#2b303b;color:#c0c5ce;">: Arc&lt;Mutex&lt;VRam&gt;&gt;,
+</span><span style="background-color:#2b303b;color:#c0c5ce;">}
+</span><span style="background-color:#2b303b;color:#c0c5ce;">
+</span><span style="background-color:#2b303b;color:#b48ead;">impl </span><span style="background-color:#2b303b;color:#c0c5ce;">PrgRam {
+</span><span style="background-color:#2b303b;color:#c0c5ce;">    </span><span style="background-color:#2b303b;color:#b48ead;">pub fn </span><span style="background-color:#2b303b;color:#8fa1b3;">new</span><span style="background-color:#2b303b;color:#c0c5ce;">(</span><span style="background-color:#2b303b;color:#bf616a;">memory</span><span style="background-color:#2b303b;color:#c0c5ce;">: Box&lt;[</span><span style="background-color:#2b303b;color:#b48ead;">u8</span><span style="background-color:#2b303b;color:#c0c5ce;">; </span><span style="background-color:#2b303b;color:#d08770;">0xFFFF</span><span style="background-color:#2b303b;color:#c0c5ce;">]&gt;, </span><span style="background-color:#2b303b;color:#bf616a;">v_ram</span><span style="background-color:#2b303b;color:#c0c5ce;">: Arc&lt;Mutex&lt;VRam&gt;&gt;) -&gt; PrgRam {
+</span><span style="background-color:#2b303b;color:#c0c5ce;">        </span><span style="background-color:#2b303b;color:#c0c5ce;">PrgRam { memory, v_ram }
+</span><span style="background-color:#2b303b;color:#c0c5ce;">    </span><span style="background-color:#2b303b;color:#c0c5ce;">}
+</span><span style="background-color:#2b303b;color:#c0c5ce;">}
+</span></pre>
+<p>PrgRam doesn't have to has VRam at this time, but We need it on a further section.</p>
+<h3 id="ppu"><a class="gutenberg-anchor" href="#ppu" aria-label="Anchor link for: ppu">🔗</a>
+PPU</h3>
+<p><code>src/nes/ppu/mod.rs</code></p>
+<pre style="background-color:#2b303b">
+<span style="background-color:#2b303b;color:#65737e;">/// [PPU](http://wiki.nesdev.com/w/index.php/PPU) is short for Picture Processing Unit
+</span><span style="background-color:#2b303b;color:#b48ead;">pub struct </span><span style="background-color:#2b303b;color:#c0c5ce;">Ppu {
+</span><span style="background-color:#2b303b;color:#c0c5ce;">    </span><span style="background-color:#2b303b;color:#bf616a;">v_ram</span><span style="background-color:#2b303b;color:#c0c5ce;">: Arc&lt;Mutex&lt;VRam&gt;&gt;,
+</span><span style="background-color:#2b303b;color:#c0c5ce;">}
+</span><span style="background-color:#2b303b;color:#c0c5ce;">
+</span><span style="background-color:#2b303b;color:#b48ead;">impl </span><span style="background-color:#2b303b;color:#c0c5ce;">Ppu {
+</span><span style="background-color:#2b303b;color:#c0c5ce;">    </span><span style="background-color:#2b303b;color:#b48ead;">pub fn </span><span style="background-color:#2b303b;color:#8fa1b3;">new</span><span style="background-color:#2b303b;color:#c0c5ce;">(</span><span style="background-color:#2b303b;color:#bf616a;">v_ram</span><span style="background-color:#2b303b;color:#c0c5ce;">: Arc&lt;Mutex&lt;VRam&gt;&gt;) -&gt; Ppu {
+</span><span style="background-color:#2b303b;color:#c0c5ce;">        </span><span style="background-color:#2b303b;color:#c0c5ce;">Ppu { v_ram }
+</span><span style="background-color:#2b303b;color:#c0c5ce;">    </span><span style="background-color:#2b303b;color:#c0c5ce;">}
+</span><span style="background-color:#2b303b;color:#c0c5ce;">}
+</span><span style="background-color:#2b303b;color:#c0c5ce;">
+</span><span style="background-color:#2b303b;color:#65737e;">/// [PPU memory](http://wiki.nesdev.com/w/index.php/PPU_memory_map)
+</span><span style="background-color:#2b303b;color:#65737e;">/// RAM is 2KB.
+</span><span style="background-color:#2b303b;color:#b48ead;">pub struct </span><span style="background-color:#2b303b;color:#c0c5ce;">VRam(Box&lt;[</span><span style="background-color:#2b303b;color:#b48ead;">u8</span><span style="background-color:#2b303b;color:#c0c5ce;">; </span><span style="background-color:#2b303b;color:#d08770;">0xFFFF</span><span style="background-color:#2b303b;color:#c0c5ce;">]&gt;);
+</span><span style="background-color:#2b303b;color:#b48ead;">impl </span><span style="background-color:#2b303b;color:#c0c5ce;">VRam {
+</span><span style="background-color:#2b303b;color:#c0c5ce;">    </span><span style="background-color:#2b303b;color:#b48ead;">pub fn </span><span style="background-color:#2b303b;color:#8fa1b3;">new</span><span style="background-color:#2b303b;color:#c0c5ce;">(</span><span style="background-color:#2b303b;color:#bf616a;">memory</span><span style="background-color:#2b303b;color:#c0c5ce;">: Box&lt;[</span><span style="background-color:#2b303b;color:#b48ead;">u8</span><span style="background-color:#2b303b;color:#c0c5ce;">; </span><span style="background-color:#2b303b;color:#d08770;">0xFFFF</span><span style="background-color:#2b303b;color:#c0c5ce;">]&gt;) -&gt; VRam {
+</span><span style="background-color:#2b303b;color:#c0c5ce;">        </span><span style="background-color:#2b303b;color:#c0c5ce;">VRam(memory)
+</span><span style="background-color:#2b303b;color:#c0c5ce;">    </span><span style="background-color:#2b303b;color:#c0c5ce;">}
+</span><span style="background-color:#2b303b;color:#c0c5ce;">}
+</span></pre><h3 id="nes"><a class="gutenberg-anchor" href="#nes" aria-label="Anchor link for: nes">🔗</a>
+NES</h3>
+<p><code>src/nes/mod.rs</code></p>
+<pre style="background-color:#2b303b">
+<span style="background-color:#2b303b;color:#b48ead;">mod </span><span style="background-color:#2b303b;color:#c0c5ce;">cpu;
+</span><span style="background-color:#2b303b;color:#b48ead;">mod </span><span style="background-color:#2b303b;color:#c0c5ce;">ppu;
+</span><span style="background-color:#2b303b;color:#c0c5ce;">
+</span><span style="background-color:#2b303b;color:#b48ead;">use </span><span style="background-color:#2b303b;color:#c0c5ce;">std::fs::File;
+</span><span style="background-color:#2b303b;color:#b48ead;">use </span><span style="background-color:#2b303b;color:#c0c5ce;">std::path::Path;
+</span><span style="background-color:#2b303b;color:#b48ead;">use </span><span style="background-color:#2b303b;color:#c0c5ce;">std::io::{BufReader, Read};
+</span><span style="background-color:#2b303b;color:#b48ead;">use </span><span style="background-color:#2b303b;color:#c0c5ce;">std::sync::{Arc, Mutex};
+</span><span style="background-color:#2b303b;color:#b48ead;">use </span><span style="background-color:#2b303b;color:#c0c5ce;">nes::cpu::{Cpu, PrgRam};
+</span><span style="background-color:#2b303b;color:#b48ead;">use </span><span style="background-color:#2b303b;color:#c0c5ce;">nes::ppu::{Ppu, VRam};
+</span><span style="background-color:#2b303b;color:#c0c5ce;">
+</span><span style="background-color:#2b303b;color:#b48ead;">pub struct </span><span style="background-color:#2b303b;color:#c0c5ce;">Nes {
+</span><span style="background-color:#2b303b;color:#c0c5ce;">    </span><span style="background-color:#2b303b;color:#bf616a;">cpu</span><span style="background-color:#2b303b;color:#c0c5ce;">: Cpu,
+</span><span style="background-color:#2b303b;color:#c0c5ce;">    </span><span style="background-color:#2b303b;color:#bf616a;">ppu</span><span style="background-color:#2b303b;color:#c0c5ce;">: Ppu,
+</span><span style="background-color:#2b303b;color:#c0c5ce;">}
+</span><span style="background-color:#2b303b;color:#b48ead;">impl </span><span style="background-color:#2b303b;color:#c0c5ce;">Nes {
+</span><span style="background-color:#2b303b;color:#c0c5ce;">    </span><span style="background-color:#2b303b;color:#b48ead;">const </span><span style="background-color:#2b303b;color:#d08770;">I_NES_HEADER_SIZE</span><span style="background-color:#2b303b;color:#c0c5ce;">: </span><span style="background-color:#2b303b;color:#b48ead;">u16 </span><span style="background-color:#2b303b;color:#c0c5ce;">= </span><span style="background-color:#2b303b;color:#d08770;">0x0010</span><span style="background-color:#2b303b;color:#c0c5ce;">;
+</span><span style="background-color:#2b303b;color:#c0c5ce;">    </span><span style="background-color:#2b303b;color:#b48ead;">const </span><span style="background-color:#2b303b;color:#d08770;">COUNT_OF_PRG_ROM_UNITS_INDEX</span><span style="background-color:#2b303b;color:#c0c5ce;">: </span><span style="background-color:#2b303b;color:#b48ead;">u16 </span><span style="background-color:#2b303b;color:#c0c5ce;">= </span><span style="background-color:#2b303b;color:#d08770;">4</span><span style="background-color:#2b303b;color:#c0c5ce;">;
+</span><span style="background-color:#2b303b;color:#c0c5ce;">    </span><span style="background-color:#2b303b;color:#b48ead;">const </span><span style="background-color:#2b303b;color:#d08770;">COUNT_OF_CHR_ROM_UNITS_INDEX</span><span style="background-color:#2b303b;color:#c0c5ce;">: </span><span style="background-color:#2b303b;color:#b48ead;">u16 </span><span style="background-color:#2b303b;color:#c0c5ce;">= </span><span style="background-color:#2b303b;color:#d08770;">5</span><span style="background-color:#2b303b;color:#c0c5ce;">;
+</span><span style="background-color:#2b303b;color:#c0c5ce;">    </span><span style="background-color:#2b303b;color:#b48ead;">const </span><span style="background-color:#2b303b;color:#d08770;">SIZE_OF_PRG_ROM_UNIT</span><span style="background-color:#2b303b;color:#c0c5ce;">: </span><span style="background-color:#2b303b;color:#b48ead;">u16 </span><span style="background-color:#2b303b;color:#c0c5ce;">= </span><span style="background-color:#2b303b;color:#d08770;">0x4000</span><span style="background-color:#2b303b;color:#c0c5ce;">;
+</span><span style="background-color:#2b303b;color:#c0c5ce;">    </span><span style="background-color:#2b303b;color:#b48ead;">const </span><span style="background-color:#2b303b;color:#d08770;">SIZE_OF_CHR_ROM_UNIT</span><span style="background-color:#2b303b;color:#c0c5ce;">: </span><span style="background-color:#2b303b;color:#b48ead;">u16 </span><span style="background-color:#2b303b;color:#c0c5ce;">= </span><span style="background-color:#2b303b;color:#d08770;">0x2000</span><span style="background-color:#2b303b;color:#c0c5ce;">;
+</span><span style="background-color:#2b303b;color:#c0c5ce;">
+</span><span style="background-color:#2b303b;color:#c0c5ce;">    </span><span style="background-color:#2b303b;color:#b48ead;">const </span><span style="background-color:#2b303b;color:#d08770;">RAM_SIZE</span><span style="background-color:#2b303b;color:#c0c5ce;">: </span><span style="background-color:#2b303b;color:#b48ead;">usize </span><span style="background-color:#2b303b;color:#c0c5ce;">= </span><span style="background-color:#2b303b;color:#d08770;">0x10000</span><span style="background-color:#2b303b;color:#c0c5ce;">;
+</span><span style="background-color:#2b303b;color:#c0c5ce;">    </span><span style="background-color:#2b303b;color:#b48ead;">const </span><span style="background-color:#2b303b;color:#d08770;">PRG_ROM_LOWER_IDX</span><span style="background-color:#2b303b;color:#c0c5ce;">: </span><span style="background-color:#2b303b;color:#b48ead;">usize </span><span style="background-color:#2b303b;color:#c0c5ce;">= </span><span style="background-color:#2b303b;color:#d08770;">0x8000</span><span style="background-color:#2b303b;color:#c0c5ce;">;
+</span><span style="background-color:#2b303b;color:#c0c5ce;">    </span><span style="background-color:#2b303b;color:#b48ead;">const </span><span style="background-color:#2b303b;color:#d08770;">PRG_ROM_UPPER_IDX</span><span style="background-color:#2b303b;color:#c0c5ce;">: </span><span style="background-color:#2b303b;color:#b48ead;">usize </span><span style="background-color:#2b303b;color:#c0c5ce;">= </span><span style="background-color:#2b303b;color:#d08770;">0xC000</span><span style="background-color:#2b303b;color:#c0c5ce;">;
+</span><span style="background-color:#2b303b;color:#c0c5ce;">
+</span><span style="background-color:#2b303b;color:#c0c5ce;">    </span><span style="background-color:#2b303b;color:#b48ead;">pub fn </span><span style="background-color:#2b303b;color:#8fa1b3;">new</span><span style="background-color:#2b303b;color:#c0c5ce;">(</span><span style="background-color:#2b303b;color:#bf616a;">casette_name</span><span style="background-color:#2b303b;color:#c0c5ce;">: &amp;</span><span style="background-color:#2b303b;color:#b48ead;">str</span><span style="background-color:#2b303b;color:#c0c5ce;">) -&gt; Nes {
+</span><span style="background-color:#2b303b;color:#c0c5ce;">        </span><span style="background-color:#2b303b;color:#b48ead;">let</span><span style="background-color:#2b303b;color:#c0c5ce;"> path_string = format!(&quot;</span><span style="background-color:#2b303b;color:#a3be8c;">cassette/</span><span style="background-color:#2b303b;color:#d08770;">{}</span><span style="background-color:#2b303b;color:#c0c5ce;">&quot;, String::from(casette_name));
+</span><span style="background-color:#2b303b;color:#c0c5ce;">        </span><span style="background-color:#2b303b;color:#b48ead;">let</span><span style="background-color:#2b303b;color:#c0c5ce;"> path = Path::new(&amp;path_string);
+</span><span style="background-color:#2b303b;color:#c0c5ce;">
+</span><span style="background-color:#2b303b;color:#c0c5ce;">        </span><span style="background-color:#2b303b;color:#b48ead;">let </span><span style="background-color:#2b303b;color:#c0c5ce;">(prg_ram, v_ram) = </span><span style="background-color:#2b303b;color:#b48ead;">Self</span><span style="background-color:#2b303b;color:#c0c5ce;">::load_ram(path);
+</span><span style="background-color:#2b303b;color:#c0c5ce;">        </span><span style="background-color:#2b303b;color:#b48ead;">let</span><span style="background-color:#2b303b;color:#c0c5ce;"> cpu = Cpu::new(prg_ram);
+</span><span style="background-color:#2b303b;color:#c0c5ce;">        </span><span style="background-color:#2b303b;color:#b48ead;">let</span><span style="background-color:#2b303b;color:#c0c5ce;"> ppu = Ppu::new(v_ram.</span><span style="background-color:#2b303b;color:#96b5b4;">clone</span><span style="background-color:#2b303b;color:#c0c5ce;">());
+</span><span style="background-color:#2b303b;color:#c0c5ce;">
+</span><span style="background-color:#2b303b;color:#c0c5ce;">        </span><span style="background-color:#2b303b;color:#c0c5ce;">Nes { cpu, ppu }
+</span><span style="background-color:#2b303b;color:#c0c5ce;">    </span><span style="background-color:#2b303b;color:#c0c5ce;">}
+</span><span style="background-color:#2b303b;color:#c0c5ce;">
+</span><span style="background-color:#2b303b;color:#c0c5ce;">    </span><span style="background-color:#2b303b;color:#65737e;">/// load [iNES](http://wiki.nesdev.com/w/index.php/INES)
+</span><span style="background-color:#2b303b;color:#c0c5ce;">    </span><span style="background-color:#2b303b;color:#b48ead;">fn </span><span style="background-color:#2b303b;color:#8fa1b3;">load_ram</span><span style="background-color:#2b303b;color:#c0c5ce;">(</span><span style="background-color:#2b303b;color:#bf616a;">path</span><span style="background-color:#2b303b;color:#c0c5ce;">: &amp;Path) -&gt; (PrgRam, Arc&lt;Mutex&lt;VRam&gt;&gt;) {
+</span><span style="background-color:#2b303b;color:#c0c5ce;">        </span><span style="background-color:#2b303b;color:#b48ead;">let</span><span style="background-color:#2b303b;color:#c0c5ce;"> file = </span><span style="background-color:#2b303b;color:#b48ead;">match </span><span style="background-color:#2b303b;color:#c0c5ce;">File::open(path) {
+</span><span style="background-color:#2b303b;color:#c0c5ce;">            </span><span style="background-color:#2b303b;color:#c0c5ce;">Ok(file) =&gt; file,
+</span><span style="background-color:#2b303b;color:#c0c5ce;">            </span><span style="background-color:#2b303b;color:#c0c5ce;">Err(why) =&gt; panic!(&quot;</span><span style="background-color:#2b303b;color:#a3be8c;">{}: path is {:?}</span><span style="background-color:#2b303b;color:#c0c5ce;">&quot;, why, path),
+</span><span style="background-color:#2b303b;color:#c0c5ce;">        </span><span style="background-color:#2b303b;color:#c0c5ce;">};
+</span><span style="background-color:#2b303b;color:#c0c5ce;">        </span><span style="background-color:#2b303b;color:#b48ead;">let mut</span><span style="background-color:#2b303b;color:#c0c5ce;"> buffer = BufReader::new(file);
+</span><span style="background-color:#2b303b;color:#c0c5ce;">        </span><span style="background-color:#2b303b;color:#b48ead;">let mut</span><span style="background-color:#2b303b;color:#c0c5ce;"> i_nes_data: Vec&lt;</span><span style="background-color:#2b303b;color:#b48ead;">u8</span><span style="background-color:#2b303b;color:#c0c5ce;">&gt; = Vec::new();
+</span><span style="background-color:#2b303b;color:#c0c5ce;">        </span><span style="background-color:#2b303b;color:#b48ead;">let </span><span style="background-color:#2b303b;color:#c0c5ce;">_ = buffer.</span><span style="background-color:#2b303b;color:#96b5b4;">read_to_end</span><span style="background-color:#2b303b;color:#c0c5ce;">(&amp;</span><span style="background-color:#2b303b;color:#b48ead;">mut</span><span style="background-color:#2b303b;color:#c0c5ce;"> i_nes_data).</span><span style="background-color:#2b303b;color:#96b5b4;">unwrap</span><span style="background-color:#2b303b;color:#c0c5ce;">();
+</span><span style="background-color:#2b303b;color:#c0c5ce;">
+</span><span style="background-color:#2b303b;color:#c0c5ce;">        </span><span style="background-color:#2b303b;color:#b48ead;">let</span><span style="background-color:#2b303b;color:#c0c5ce;"> prg_rom_start = </span><span style="background-color:#2b303b;color:#b48ead;">Self</span><span style="background-color:#2b303b;color:#c0c5ce;">::</span><span style="background-color:#2b303b;color:#d08770;">I_NES_HEADER_SIZE</span><span style="background-color:#2b303b;color:#c0c5ce;">;
+</span><span style="background-color:#2b303b;color:#c0c5ce;">        </span><span style="background-color:#2b303b;color:#b48ead;">let</span><span style="background-color:#2b303b;color:#c0c5ce;"> prg_rom_end = prg_rom_start +
+</span><span style="background-color:#2b303b;color:#c0c5ce;">            </span><span style="background-color:#2b303b;color:#c0c5ce;">i_nes_data[</span><span style="background-color:#2b303b;color:#b48ead;">Self</span><span style="background-color:#2b303b;color:#c0c5ce;">::</span><span style="background-color:#2b303b;color:#d08770;">COUNT_OF_PRG_ROM_UNITS_INDEX </span><span style="background-color:#2b303b;color:#c0c5ce;">as </span><span style="background-color:#2b303b;color:#b48ead;">usize</span><span style="background-color:#2b303b;color:#c0c5ce;">] as </span><span style="background-color:#2b303b;color:#b48ead;">u16 </span><span style="background-color:#2b303b;color:#c0c5ce;">* </span><span style="background-color:#2b303b;color:#b48ead;">Self</span><span style="background-color:#2b303b;color:#c0c5ce;">::</span><span style="background-color:#2b303b;color:#d08770;">SIZE_OF_PRG_ROM_UNIT </span><span style="background-color:#2b303b;color:#c0c5ce;">- </span><span style="background-color:#2b303b;color:#d08770;">1</span><span style="background-color:#2b303b;color:#c0c5ce;">;
+</span><span style="background-color:#2b303b;color:#c0c5ce;">
+</span><span style="background-color:#2b303b;color:#c0c5ce;">        </span><span style="background-color:#2b303b;color:#b48ead;">let</span><span style="background-color:#2b303b;color:#c0c5ce;"> chr_rom_banks_num = i_nes_data[</span><span style="background-color:#2b303b;color:#b48ead;">Self</span><span style="background-color:#2b303b;color:#c0c5ce;">::</span><span style="background-color:#2b303b;color:#d08770;">COUNT_OF_CHR_ROM_UNITS_INDEX </span><span style="background-color:#2b303b;color:#c0c5ce;">as </span><span style="background-color:#2b303b;color:#b48ead;">usize</span><span style="background-color:#2b303b;color:#c0c5ce;">];
+</span><span style="background-color:#2b303b;color:#c0c5ce;">        </span><span style="background-color:#2b303b;color:#b48ead;">let</span><span style="background-color:#2b303b;color:#c0c5ce;"> chr_rom_start = prg_rom_end + </span><span style="background-color:#2b303b;color:#d08770;">1</span><span style="background-color:#2b303b;color:#c0c5ce;">;
+</span><span style="background-color:#2b303b;color:#c0c5ce;">        </span><span style="background-color:#2b303b;color:#b48ead;">let</span><span style="background-color:#2b303b;color:#c0c5ce;"> chr_rom_end = chr_rom_start + chr_rom_banks_num as </span><span style="background-color:#2b303b;color:#b48ead;">u16 </span><span style="background-color:#2b303b;color:#c0c5ce;">* </span><span style="background-color:#2b303b;color:#b48ead;">Self</span><span style="background-color:#2b303b;color:#c0c5ce;">::</span><span style="background-color:#2b303b;color:#d08770;">SIZE_OF_CHR_ROM_UNIT </span><span style="background-color:#2b303b;color:#c0c5ce;">- </span><span style="background-color:#2b303b;color:#d08770;">1</span><span style="background-color:#2b303b;color:#c0c5ce;">;
+</span><span style="background-color:#2b303b;color:#c0c5ce;">
+</span><span style="background-color:#2b303b;color:#c0c5ce;">        </span><span style="background-color:#2b303b;color:#65737e;">// set prg_ram_memory
+</span><span style="background-color:#2b303b;color:#c0c5ce;">        </span><span style="background-color:#2b303b;color:#b48ead;">let mut</span><span style="background-color:#2b303b;color:#c0c5ce;"> prg_rom: Vec&lt;</span><span style="background-color:#2b303b;color:#b48ead;">u8</span><span style="background-color:#2b303b;color:#c0c5ce;">&gt; = Vec::new();
+</span><span style="background-color:#2b303b;color:#c0c5ce;">        </span><span style="background-color:#2b303b;color:#c0c5ce;">prg_rom.</span><span style="background-color:#2b303b;color:#96b5b4;">extend_from_slice</span><span style="background-color:#2b303b;color:#c0c5ce;">(
+</span><span style="background-color:#2b303b;color:#c0c5ce;">            </span><span style="background-color:#2b303b;color:#c0c5ce;">&amp;i_nes_data[(prg_rom_start as </span><span style="background-color:#2b303b;color:#b48ead;">usize</span><span style="background-color:#2b303b;color:#c0c5ce;">)..(prg_rom_end as </span><span style="background-color:#2b303b;color:#b48ead;">usize </span><span style="background-color:#2b303b;color:#c0c5ce;">+ </span><span style="background-color:#2b303b;color:#d08770;">1</span><span style="background-color:#2b303b;color:#c0c5ce;">)],
+</span><span style="background-color:#2b303b;color:#c0c5ce;">        </span><span style="background-color:#2b303b;color:#c0c5ce;">);
+</span><span style="background-color:#2b303b;color:#c0c5ce;">
+</span><span style="background-color:#2b303b;color:#c0c5ce;">        </span><span style="background-color:#2b303b;color:#b48ead;">let mut</span><span style="background-color:#2b303b;color:#c0c5ce;"> prg_ram_memory: Box&lt;[</span><span style="background-color:#2b303b;color:#b48ead;">u8</span><span style="background-color:#2b303b;color:#c0c5ce;">; </span><span style="background-color:#2b303b;color:#bf616a;">Self</span><span style="background-color:#2b303b;color:#c0c5ce;">::RAM_SIZE]&gt; = Box::new([</span><span style="background-color:#2b303b;color:#d08770;">0</span><span style="background-color:#2b303b;color:#c0c5ce;">; </span><span style="background-color:#2b303b;color:#b48ead;">Self</span><span style="background-color:#2b303b;color:#c0c5ce;">::</span><span style="background-color:#2b303b;color:#d08770;">RAM_SIZE</span><span style="background-color:#2b303b;color:#c0c5ce;">]);
+</span><span style="background-color:#2b303b;color:#c0c5ce;">        </span><span style="background-color:#2b303b;color:#c0c5ce;">prg_ram_memory[</span><span style="background-color:#2b303b;color:#b48ead;">Self</span><span style="background-color:#2b303b;color:#c0c5ce;">::</span><span style="background-color:#2b303b;color:#d08770;">PRG_ROM_LOWER_IDX</span><span style="background-color:#2b303b;color:#c0c5ce;">..</span><span style="background-color:#2b303b;color:#b48ead;">Self</span><span style="background-color:#2b303b;color:#c0c5ce;">::</span><span style="background-color:#2b303b;color:#d08770;">PRG_ROM_UPPER_IDX</span><span style="background-color:#2b303b;color:#c0c5ce;">]
+</span><span style="background-color:#2b303b;color:#c0c5ce;">            </span><span style="background-color:#2b303b;color:#c0c5ce;">.</span><span style="background-color:#2b303b;color:#96b5b4;">clone_from_slice</span><span style="background-color:#2b303b;color:#c0c5ce;">(&amp;prg_rom[..(</span><span style="background-color:#2b303b;color:#b48ead;">Self</span><span style="background-color:#2b303b;color:#c0c5ce;">::</span><span style="background-color:#2b303b;color:#d08770;">SIZE_OF_PRG_ROM_UNIT </span><span style="background-color:#2b303b;color:#c0c5ce;">as </span><span style="background-color:#2b303b;color:#b48ead;">usize</span><span style="background-color:#2b303b;color:#c0c5ce;">)]);
+</span><span style="background-color:#2b303b;color:#c0c5ce;">
+</span><span style="background-color:#2b303b;color:#c0c5ce;">        </span><span style="background-color:#2b303b;color:#b48ead;">match</span><span style="background-color:#2b303b;color:#c0c5ce;"> i_nes_data[</span><span style="background-color:#2b303b;color:#b48ead;">Self</span><span style="background-color:#2b303b;color:#c0c5ce;">::</span><span style="background-color:#2b303b;color:#d08770;">COUNT_OF_PRG_ROM_UNITS_INDEX </span><span style="background-color:#2b303b;color:#c0c5ce;">as </span><span style="background-color:#2b303b;color:#b48ead;">usize</span><span style="background-color:#2b303b;color:#c0c5ce;">] {
+</span><span style="background-color:#2b303b;color:#c0c5ce;">            </span><span style="background-color:#2b303b;color:#d08770;">1 </span><span style="background-color:#2b303b;color:#c0c5ce;">=&gt; {
+</span><span style="background-color:#2b303b;color:#c0c5ce;">                </span><span style="background-color:#2b303b;color:#c0c5ce;">prg_ram_memory[</span><span style="background-color:#2b303b;color:#b48ead;">Self</span><span style="background-color:#2b303b;color:#c0c5ce;">::</span><span style="background-color:#2b303b;color:#d08770;">PRG_ROM_UPPER_IDX</span><span style="background-color:#2b303b;color:#c0c5ce;">..].</span><span style="background-color:#2b303b;color:#96b5b4;">clone_from_slice</span><span style="background-color:#2b303b;color:#c0c5ce;">(
+</span><span style="background-color:#2b303b;color:#c0c5ce;">                    </span><span style="background-color:#2b303b;color:#c0c5ce;">&amp;prg_rom[..(</span><span style="background-color:#2b303b;color:#b48ead;">Self</span><span style="background-color:#2b303b;color:#c0c5ce;">::</span><span style="background-color:#2b303b;color:#d08770;">SIZE_OF_PRG_ROM_UNIT </span><span style="background-color:#2b303b;color:#c0c5ce;">as </span><span style="background-color:#2b303b;color:#b48ead;">usize</span><span style="background-color:#2b303b;color:#c0c5ce;">)],
+</span><span style="background-color:#2b303b;color:#c0c5ce;">                </span><span style="background-color:#2b303b;color:#c0c5ce;">);
+</span><span style="background-color:#2b303b;color:#c0c5ce;">
+</span><span style="background-color:#2b303b;color:#c0c5ce;">            </span><span style="background-color:#2b303b;color:#c0c5ce;">}
+</span><span style="background-color:#2b303b;color:#c0c5ce;">            </span><span style="background-color:#2b303b;color:#d08770;">2</span><span style="background-color:#2b303b;color:#c0c5ce;">...</span><span style="background-color:#2b303b;color:#d08770;">255 </span><span style="background-color:#2b303b;color:#c0c5ce;">=&gt; {
+</span><span style="background-color:#2b303b;color:#c0c5ce;">                </span><span style="background-color:#2b303b;color:#c0c5ce;">prg_ram_memory[</span><span style="background-color:#2b303b;color:#b48ead;">Self</span><span style="background-color:#2b303b;color:#c0c5ce;">::</span><span style="background-color:#2b303b;color:#d08770;">PRG_ROM_UPPER_IDX</span><span style="background-color:#2b303b;color:#c0c5ce;">..].</span><span style="background-color:#2b303b;color:#96b5b4;">clone_from_slice</span><span style="background-color:#2b303b;color:#c0c5ce;">(
+</span><span style="background-color:#2b303b;color:#c0c5ce;">                    </span><span style="background-color:#2b303b;color:#c0c5ce;">&amp;prg_rom[(</span><span style="background-color:#2b303b;color:#b48ead;">Self</span><span style="background-color:#2b303b;color:#c0c5ce;">::</span><span style="background-color:#2b303b;color:#d08770;">SIZE_OF_PRG_ROM_UNIT </span><span style="background-color:#2b303b;color:#c0c5ce;">as </span><span style="background-color:#2b303b;color:#b48ead;">usize</span><span style="background-color:#2b303b;color:#c0c5ce;">)..(</span><span style="background-color:#2b303b;color:#b48ead;">Self</span><span style="background-color:#2b303b;color:#c0c5ce;">::</span><span style="background-color:#2b303b;color:#d08770;">SIZE_OF_PRG_ROM_UNIT </span><span style="background-color:#2b303b;color:#c0c5ce;">as </span><span style="background-color:#2b303b;color:#b48ead;">usize </span><span style="background-color:#2b303b;color:#c0c5ce;">* </span><span style="background-color:#2b303b;color:#d08770;">2</span><span style="background-color:#2b303b;color:#c0c5ce;">)],
+</span><span style="background-color:#2b303b;color:#c0c5ce;">                </span><span style="background-color:#2b303b;color:#c0c5ce;">);
+</span><span style="background-color:#2b303b;color:#c0c5ce;">            </span><span style="background-color:#2b303b;color:#c0c5ce;">}
+</span><span style="background-color:#2b303b;color:#c0c5ce;">            </span><span style="background-color:#2b303b;color:#c0c5ce;">_ =&gt; {}
+</span><span style="background-color:#2b303b;color:#c0c5ce;">        </span><span style="background-color:#2b303b;color:#c0c5ce;">}
+</span><span style="background-color:#2b303b;color:#c0c5ce;">
+</span><span style="background-color:#2b303b;color:#c0c5ce;">        </span><span style="background-color:#2b303b;color:#65737e;">// set v_ram_memory
+</span><span style="background-color:#2b303b;color:#c0c5ce;">        </span><span style="background-color:#2b303b;color:#b48ead;">let mut</span><span style="background-color:#2b303b;color:#c0c5ce;"> v_ram_memory: Box&lt;[</span><span style="background-color:#2b303b;color:#b48ead;">u8</span><span style="background-color:#2b303b;color:#c0c5ce;">; </span><span style="background-color:#2b303b;color:#bf616a;">Self</span><span style="background-color:#2b303b;color:#c0c5ce;">::RAM_SIZE]&gt; = Box::new([</span><span style="background-color:#2b303b;color:#d08770;">0</span><span style="background-color:#2b303b;color:#c0c5ce;">; </span><span style="background-color:#2b303b;color:#b48ead;">Self</span><span style="background-color:#2b303b;color:#c0c5ce;">::</span><span style="background-color:#2b303b;color:#d08770;">RAM_SIZE</span><span style="background-color:#2b303b;color:#c0c5ce;">]);
+</span><span style="background-color:#2b303b;color:#c0c5ce;">        </span><span style="background-color:#2b303b;color:#c0c5ce;">v_ram_memory[..(chr_rom_end as </span><span style="background-color:#2b303b;color:#b48ead;">usize </span><span style="background-color:#2b303b;color:#c0c5ce;">+ </span><span style="background-color:#2b303b;color:#d08770;">1 </span><span style="background-color:#2b303b;color:#c0c5ce;">- chr_rom_start as </span><span style="background-color:#2b303b;color:#b48ead;">usize</span><span style="background-color:#2b303b;color:#c0c5ce;">)].</span><span style="background-color:#2b303b;color:#96b5b4;">clone_from_slice</span><span style="background-color:#2b303b;color:#c0c5ce;">(
+</span><span style="background-color:#2b303b;color:#c0c5ce;">            </span><span style="background-color:#2b303b;color:#c0c5ce;">&amp;i_nes_data[(chr_rom_start as </span><span style="background-color:#2b303b;color:#b48ead;">usize</span><span style="background-color:#2b303b;color:#c0c5ce;">)..(chr_rom_end as </span><span style="background-color:#2b303b;color:#b48ead;">usize </span><span style="background-color:#2b303b;color:#c0c5ce;">+ </span><span style="background-color:#2b303b;color:#d08770;">1</span><span style="background-color:#2b303b;color:#c0c5ce;">)],
+</span><span style="background-color:#2b303b;color:#c0c5ce;">        </span><span style="background-color:#2b303b;color:#c0c5ce;">);
+</span><span style="background-color:#2b303b;color:#c0c5ce;">
+</span><span style="background-color:#2b303b;color:#c0c5ce;">        </span><span style="background-color:#2b303b;color:#b48ead;">let</span><span style="background-color:#2b303b;color:#c0c5ce;"> v_ram = Arc::new(Mutex::new(VRam::new(v_ram_memory)));
+</span><span style="background-color:#2b303b;color:#c0c5ce;">        </span><span style="background-color:#2b303b;color:#b48ead;">let</span><span style="background-color:#2b303b;color:#c0c5ce;"> prg_ram = PrgRam::new(prg_ram_memory, v_ram.</span><span style="background-color:#2b303b;color:#96b5b4;">clone</span><span style="background-color:#2b303b;color:#c0c5ce;">());
+</span><span style="background-color:#2b303b;color:#c0c5ce;">
+</span><span style="background-color:#2b303b;color:#c0c5ce;">        </span><span style="background-color:#2b303b;color:#c0c5ce;">(prg_ram, v_ram)
+</span><span style="background-color:#2b303b;color:#c0c5ce;">    </span><span style="background-color:#2b303b;color:#c0c5ce;">}
+</span><span style="background-color:#2b303b;color:#c0c5ce;">}
+</span><span style="background-color:#2b303b;color:#c0c5ce;">
+</span></pre>
+<p><code>load_ram</code> method is today's main topic.</p>
+<ol>
+<li>Parse an iNES format file.</li>
+<li>Check the header.</li>
+</ol>
+<ul>
+<li>4th Byte in the header means count of PRG ROM <em>units</em>.
+<ul>
+<li>A PRG ROM unit is 16KB.</li>
+</ul>
+</li>
+<li>5th Byte in the header means count of CHR ROM <em>units</em>.
+<ul>
+<li>A CHR ROM unit is 8KB.</li>
+</ul>
+</li>
+</ul>
+<ol start="3">
+<li>Load PRG ROM data to PrgRam.</li>
+<li>Load CHR ROM data to VRam.</li>
+</ol>
+<h2 id="dump"><a class="gutenberg-anchor" href="#dump" aria-label="Anchor link for: dump">🔗</a>
+dump</h2>
+<p>Dump PrgRam and VRam to check they store data.</p>
+<pre style="background-color:#2b303b">
+<span style="background-color:#2b303b;color:#65737e;">// src/nes/cpu/mod.rs
+</span><span style="background-color:#2b303b;color:#b48ead;">impl </span><span style="background-color:#2b303b;color:#c0c5ce;">Cpu {
+</span><span style="background-color:#2b303b;color:#c0c5ce;">    </span><span style="background-color:#2b303b;color:#c0c5ce;">#[</span><span style="background-color:#2b303b;color:#bf616a;">allow</span><span style="background-color:#2b303b;color:#c0c5ce;">(dead_code)]
+</span><span style="background-color:#2b303b;color:#c0c5ce;">    </span><span style="background-color:#2b303b;color:#b48ead;">pub fn </span><span style="background-color:#2b303b;color:#8fa1b3;">dump</span><span style="background-color:#2b303b;color:#c0c5ce;">(&amp;</span><span style="background-color:#2b303b;color:#bf616a;">self</span><span style="background-color:#2b303b;color:#c0c5ce;">) {
+</span><span style="background-color:#2b303b;color:#c0c5ce;">        </span><span style="background-color:#2b303b;color:#bf616a;">self</span><span style="background-color:#2b303b;color:#c0c5ce;">.prg_ram.</span><span style="background-color:#2b303b;color:#96b5b4;">dump</span><span style="background-color:#2b303b;color:#c0c5ce;">();
+</span><span style="background-color:#2b303b;color:#c0c5ce;">    </span><span style="background-color:#2b303b;color:#c0c5ce;">}
+</span><span style="background-color:#2b303b;color:#c0c5ce;">}
+</span><span style="background-color:#2b303b;color:#c0c5ce;">
+</span><span style="background-color:#2b303b;color:#b48ead;">impl </span><span style="background-color:#2b303b;color:#c0c5ce;">PrgRam {
+</span><span style="background-color:#2b303b;color:#c0c5ce;">    </span><span style="background-color:#2b303b;color:#b48ead;">pub fn </span><span style="background-color:#2b303b;color:#8fa1b3;">dump</span><span style="background-color:#2b303b;color:#c0c5ce;">(&amp;</span><span style="background-color:#2b303b;color:#bf616a;">self</span><span style="background-color:#2b303b;color:#c0c5ce;">) {
+</span><span style="background-color:#2b303b;color:#c0c5ce;">        </span><span style="background-color:#2b303b;color:#b48ead;">let</span><span style="background-color:#2b303b;color:#c0c5ce;"> dump_file = &quot;</span><span style="background-color:#2b303b;color:#a3be8c;">prg_ram.dump</span><span style="background-color:#2b303b;color:#c0c5ce;">&quot;;
+</span><span style="background-color:#2b303b;color:#c0c5ce;">        </span><span style="background-color:#2b303b;color:#b48ead;">let mut</span><span style="background-color:#2b303b;color:#c0c5ce;"> f = BufWriter::new(File::create(dump_file).</span><span style="background-color:#2b303b;color:#96b5b4;">unwrap</span><span style="background-color:#2b303b;color:#c0c5ce;">());
+</span><span style="background-color:#2b303b;color:#c0c5ce;">        </span><span style="background-color:#2b303b;color:#b48ead;">for</span><span style="background-color:#2b303b;color:#c0c5ce;"> v in </span><span style="background-color:#2b303b;color:#bf616a;">self</span><span style="background-color:#2b303b;color:#c0c5ce;">.memory.</span><span style="background-color:#2b303b;color:#96b5b4;">iter</span><span style="background-color:#2b303b;color:#c0c5ce;">() {
+</span><span style="background-color:#2b303b;color:#c0c5ce;">            </span><span style="background-color:#2b303b;color:#c0c5ce;">f.</span><span style="background-color:#2b303b;color:#96b5b4;">write</span><span style="background-color:#2b303b;color:#c0c5ce;">(&amp;[*v]).</span><span style="background-color:#2b303b;color:#96b5b4;">unwrap</span><span style="background-color:#2b303b;color:#c0c5ce;">();
+</span><span style="background-color:#2b303b;color:#c0c5ce;">        </span><span style="background-color:#2b303b;color:#c0c5ce;">}
+</span><span style="background-color:#2b303b;color:#c0c5ce;">    </span><span style="background-color:#2b303b;color:#c0c5ce;">}
+</span><span style="background-color:#2b303b;color:#c0c5ce;">}
+</span><span style="background-color:#2b303b;color:#c0c5ce;">
+</span><span style="background-color:#2b303b;color:#c0c5ce;">
+</span><span style="background-color:#2b303b;color:#65737e;">// src/nes/ppu/mod.rs
+</span><span style="background-color:#2b303b;color:#b48ead;">impl </span><span style="background-color:#2b303b;color:#c0c5ce;">Ppu {
+</span><span style="background-color:#2b303b;color:#c0c5ce;">    </span><span style="background-color:#2b303b;color:#c0c5ce;">#[</span><span style="background-color:#2b303b;color:#bf616a;">allow</span><span style="background-color:#2b303b;color:#c0c5ce;">(dead_code)]
+</span><span style="background-color:#2b303b;color:#c0c5ce;">    </span><span style="background-color:#2b303b;color:#b48ead;">pub fn </span><span style="background-color:#2b303b;color:#8fa1b3;">dump</span><span style="background-color:#2b303b;color:#c0c5ce;">(&amp;</span><span style="background-color:#2b303b;color:#bf616a;">self</span><span style="background-color:#2b303b;color:#c0c5ce;">) {
+</span><span style="background-color:#2b303b;color:#c0c5ce;">        </span><span style="background-color:#2b303b;color:#bf616a;">self</span><span style="background-color:#2b303b;color:#c0c5ce;">.v_ram.</span><span style="background-color:#2b303b;color:#96b5b4;">lock</span><span style="background-color:#2b303b;color:#c0c5ce;">().</span><span style="background-color:#2b303b;color:#96b5b4;">unwrap</span><span style="background-color:#2b303b;color:#c0c5ce;">().</span><span style="background-color:#2b303b;color:#96b5b4;">dump</span><span style="background-color:#2b303b;color:#c0c5ce;">();
+</span><span style="background-color:#2b303b;color:#c0c5ce;">    </span><span style="background-color:#2b303b;color:#c0c5ce;">}
+</span><span style="background-color:#2b303b;color:#c0c5ce;">}
+</span><span style="background-color:#2b303b;color:#c0c5ce;">
+</span><span style="background-color:#2b303b;color:#b48ead;">impl </span><span style="background-color:#2b303b;color:#c0c5ce;">VRam {
+</span><span style="background-color:#2b303b;color:#c0c5ce;">    </span><span style="background-color:#2b303b;color:#b48ead;">fn </span><span style="background-color:#2b303b;color:#8fa1b3;">dump</span><span style="background-color:#2b303b;color:#c0c5ce;">(&amp;</span><span style="background-color:#2b303b;color:#bf616a;">self</span><span style="background-color:#2b303b;color:#c0c5ce;">) {
+</span><span style="background-color:#2b303b;color:#c0c5ce;">        </span><span style="background-color:#2b303b;color:#b48ead;">let</span><span style="background-color:#2b303b;color:#c0c5ce;"> dump_file = &quot;</span><span style="background-color:#2b303b;color:#a3be8c;">v_ram.dump</span><span style="background-color:#2b303b;color:#c0c5ce;">&quot;;
+</span><span style="background-color:#2b303b;color:#c0c5ce;">        </span><span style="background-color:#2b303b;color:#b48ead;">let mut</span><span style="background-color:#2b303b;color:#c0c5ce;"> f = BufWriter::new(File::create(dump_file).</span><span style="background-color:#2b303b;color:#96b5b4;">unwrap</span><span style="background-color:#2b303b;color:#c0c5ce;">());
+</span><span style="background-color:#2b303b;color:#c0c5ce;">        </span><span style="background-color:#2b303b;color:#b48ead;">for</span><span style="background-color:#2b303b;color:#c0c5ce;"> v in </span><span style="background-color:#2b303b;color:#bf616a;">self</span><span style="background-color:#2b303b;color:#c0c5ce;">.</span><span style="background-color:#2b303b;color:#d08770;">0.</span><span style="background-color:#2b303b;color:#96b5b4;">iter</span><span style="background-color:#2b303b;color:#c0c5ce;">() {
+</span><span style="background-color:#2b303b;color:#c0c5ce;">            </span><span style="background-color:#2b303b;color:#c0c5ce;">f.</span><span style="background-color:#2b303b;color:#96b5b4;">write</span><span style="background-color:#2b303b;color:#c0c5ce;">(&amp;[*v]).</span><span style="background-color:#2b303b;color:#96b5b4;">unwrap</span><span style="background-color:#2b303b;color:#c0c5ce;">();
+</span><span style="background-color:#2b303b;color:#c0c5ce;">        </span><span style="background-color:#2b303b;color:#c0c5ce;">}
+</span><span style="background-color:#2b303b;color:#c0c5ce;">    </span><span style="background-color:#2b303b;color:#c0c5ce;">}
+</span><span style="background-color:#2b303b;color:#c0c5ce;">}
+</span><span style="background-color:#2b303b;color:#c0c5ce;">
+</span><span style="background-color:#2b303b;color:#c0c5ce;">
+</span><span style="background-color:#2b303b;color:#65737e;">// src/nes/mod.rs
+</span><span style="background-color:#2b303b;color:#c0c5ce;">    </span><span style="background-color:#2b303b;color:#b48ead;">pub fn </span><span style="background-color:#2b303b;color:#8fa1b3;">new</span><span style="background-color:#2b303b;color:#c0c5ce;">(</span><span style="background-color:#2b303b;color:#bf616a;">casette_name</span><span style="background-color:#2b303b;color:#c0c5ce;">: &amp;</span><span style="background-color:#2b303b;color:#b48ead;">str</span><span style="background-color:#2b303b;color:#c0c5ce;">) -&gt; Nes {
+</span><span style="background-color:#2b303b;color:#c0c5ce;">       </span><span style="background-color:#2b303b;color:#65737e;">// load iNES
+</span><span style="background-color:#2b303b;color:#c0c5ce;">
+</span><span style="background-color:#2b303b;color:#c0c5ce;">        </span><span style="background-color:#2b303b;color:#c0c5ce;">#[</span><span style="background-color:#2b303b;color:#bf616a;">cfg</span><span style="background-color:#2b303b;color:#c0c5ce;">(feature = &quot;</span><span style="background-color:#2b303b;color:#a3be8c;">dump</span><span style="background-color:#2b303b;color:#c0c5ce;">&quot;)] cpu.</span><span style="background-color:#2b303b;color:#96b5b4;">dump</span><span style="background-color:#2b303b;color:#c0c5ce;">();
+</span><span style="background-color:#2b303b;color:#c0c5ce;">        </span><span style="background-color:#2b303b;color:#c0c5ce;">ppu.</span><span style="background-color:#2b303b;color:#96b5b4;">dump</span><span style="background-color:#2b303b;color:#c0c5ce;">();
+</span><span style="background-color:#2b303b;color:#c0c5ce;">
+</span><span style="background-color:#2b303b;color:#c0c5ce;">        </span><span style="background-color:#2b303b;color:#c0c5ce;">Nes { cpu, ppu }
+</span><span style="background-color:#2b303b;color:#c0c5ce;">    </span><span style="background-color:#2b303b;color:#c0c5ce;">}
+</span><span style="background-color:#2b303b;color:#c0c5ce;">
+</span><span style="background-color:#2b303b;color:#c0c5ce;">
+</span><span style="background-color:#2b303b;color:#65737e;">// src/main.rs
+</span><span style="background-color:#2b303b;color:#b48ead;">extern crate</span><span style="background-color:#2b303b;color:#c0c5ce;"> nes;
+</span><span style="background-color:#2b303b;color:#c0c5ce;">
+</span><span style="background-color:#2b303b;color:#b48ead;">use </span><span style="background-color:#2b303b;color:#c0c5ce;">nes::nes::Nes;
+</span><span style="background-color:#2b303b;color:#c0c5ce;">
+</span><span style="background-color:#2b303b;color:#b48ead;">fn </span><span style="background-color:#2b303b;color:#8fa1b3;">main</span><span style="background-color:#2b303b;color:#c0c5ce;">() {
+</span><span style="background-color:#2b303b;color:#c0c5ce;">    </span><span style="background-color:#2b303b;color:#b48ead;">let</span><span style="background-color:#2b303b;color:#c0c5ce;"> _nes = Nes::new(&quot;</span><span style="background-color:#2b303b;color:#a3be8c;">sample1.nes</span><span style="background-color:#2b303b;color:#c0c5ce;">&quot;);
+</span><span style="background-color:#2b303b;color:#c0c5ce;">}
+</span><span style="background-color:#2b303b;color:#c0c5ce;">
+</span><span style="background-color:#2b303b;color:#c0c5ce;">
+</span><span style="background-color:#2b303b;color:#65737e;">// Cargo.toml
+</span><span style="background-color:#2b303b;color:#c0c5ce;">[features]
+</span><span style="background-color:#2b303b;color:#c0c5ce;">dump = []
+</span></pre>
+<p>Sample iNES file is <a href="http://hp.vector.co.jp/authors/VA042397/nes/sample.html">here</a>(Download from a first link).</p>
+<p>Unzip the file and put <code>sample1.nes</code> at <code>cassette/</code>.</p>
+<p>After <code>cargo run --features dump</code>, you can check <code>prg_ram.dump</code> and <code>v_ram.dump</code> using hex editor such as <a href="http://www.suavetech.com/0xed/">0xED</a> and <a href="https://sourceforge.net/projects/hexedit/">hexedit</a>.</p>
+<p>Whole source code is available <a href="https://github.com/bon-chi/nes/tree/load-iNES-file">here</a>.</p>
+
+</div>
+
+        </div>
+
+    </body>
+
+</html>
