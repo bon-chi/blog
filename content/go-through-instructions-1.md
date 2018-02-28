@@ -1,274 +1,226 @@
 +++
-title = "load iNES"
-description = "Load iNES file to NES"
-date = 2018-02-28
+title = "Go Through Instructions 1"
+description = "Go Through Instructions 1"
+date = 2018-03-01
 template = "page.html"
 tags = ["NES"]
 +++
 
-## First of all
-NES is Nintendo Entertainment System a.k.a. 'ファミコン'.
-My goal is developing NES simulator using Rust language.
-Reference guide is [here](http://wiki.nesdev.com/w/index.php/NES_reference_guide).
+## Goal
+Go through all instructions in `sample1.nes`.
 
-NES consists of some parts. For example CPU, PPU, APU and so on. I start from loading iNES file,  which is a format of NES binary programs. You can check iNES format [here](http://wiki.nesdev.com/w/index.php/INES).
+CPU instruction is
+1. fetch a instruction
+  1. fetch a instruction
+  2. increment PC
+2. parse the instruction into OperationCode, AddressingMode, IndexRegister(optional).
+3. execute operation
 
-## Two parts of iNES
-iNES have two parts. PRG_ROM and CHR_ROM. PRG_ROM is for game logic and CHR_ROM is for graphic. When iNES is loaded, PRG_RAM load PRG_ROM data and V_RAM load CHR_ROM.
+## fetch a instruction
+Fetching a instruction from `PrgRam` and address is indicated by ProgramCounter.
 
-## PRG_RAM and V_RAM
-PRG_RAM and V_RAM has 2KB memory.
-
-## init project
-~~~
-% cargo init --bin nes
-% cd nes
-~~~
-
-## nes module
-This is the today's directory structure.
-~~~
-% tree
-.
-├── lib.rs
-├── main.rs
-└── nes
-    ├── cpu
-    │   └── mod.rs
-    ├── mod.rs
-    └── ppu
-        └── mod.rs
-~~~
-
-### CPU
 `src/nes/cpu/mod.rs`
 ```rust
-/// [CPU](http://wiki.nesdev.com/w/index.php/CPU)
 pub struct Cpu {
+    /// [Registers](http://wiki.nesdev.com/w/index.php/CPU_registers)
+    // Program Counter
+    pc: u16,
+
     prg_ram: PrgRam,
 }
 
 impl Cpu {
-    pub fn new(prg_ram: PrgRam) -> Cpu {
-        Cpu { prg_ram }
+    fn fetch_instruction(&self) -> u8 {
+        self.prg_ram_value()
     }
-}
 
-/// [CPU memory](http://wiki.nesdev.com/w/index.php/CPU_memory_map)
-/// RAM is 2KB.
-pub struct PrgRam {
-    memory: Box<[u8; 0xFFFF]>,
-    v_ram: Arc<Mutex<VRam>>,
-}
-
-impl PrgRam {
-    pub fn new(memory: Box<[u8; 0xFFFF]>, v_ram: Arc<Mutex<VRam>>) -> PrgRam {
-        PrgRam { memory, v_ram }
+    fn prg_ram_value(&self) -> u8 {
+        self.prg_ram.memory[self.pc as usize]
     }
 }
 ```
-PrgRam doesn't have to has VRam at this time, but We need it on a further section.
 
-### PPU
-`src/nes/ppu/mod.rs`
+Incrementing ProgramCounter is simple.
+
+`src/nes/cpu/mod.rs`
 ```rust
-/// [PPU](http://wiki.nesdev.com/w/index.php/PPU) is short for Picture Processing Unit
-pub struct Ppu {
-    v_ram: Arc<Mutex<VRam>>,
-}
-
-impl Ppu {
-    pub fn new(v_ram: Arc<Mutex<VRam>>) -> Ppu {
-        Ppu { v_ram }
-    }
-}
-
-/// [PPU memory](http://wiki.nesdev.com/w/index.php/PPU_memory_map)
-/// RAM is 2KB.
-pub struct VRam(Box<[u8; 0xFFFF]>);
-impl VRam {
-    pub fn new(memory: Box<[u8; 0xFFFF]>) -> VRam {
-        VRam(memory)
-    }
-}
-```
-### NES
-`src/nes/mod.rs`
-``` rust
-mod cpu;
-mod ppu;
-
-use std::fs::File;
-use std::path::Path;
-use std::io::{BufReader, Read};
-use std::sync::{Arc, Mutex};
-use nes::cpu::{Cpu, PrgRam};
-use nes::ppu::{Ppu, VRam};
-
-pub struct Nes {
-    cpu: Cpu,
-    ppu: Ppu,
-}
-impl Nes {
-    const I_NES_HEADER_SIZE: u16 = 0x0010;
-    const COUNT_OF_PRG_ROM_UNITS_INDEX: u16 = 4;
-    const COUNT_OF_CHR_ROM_UNITS_INDEX: u16 = 5;
-    const SIZE_OF_PRG_ROM_UNIT: u16 = 0x4000;
-    const SIZE_OF_CHR_ROM_UNIT: u16 = 0x2000;
-
-    const RAM_SIZE: usize = 0x10000;
-    const PRG_ROM_LOWER_IDX: usize = 0x8000;
-    const PRG_ROM_UPPER_IDX: usize = 0xC000;
-
-    pub fn new(casette_name: &str) -> Nes {
-        let path_string = format!("cassette/{}", String::from(casette_name));
-        let path = Path::new(&path_string);
-
-        let (prg_ram, v_ram) = Self::load_ram(path);
-        let cpu = Cpu::new(prg_ram);
-        let ppu = Ppu::new(v_ram.clone());
-
-        Nes { cpu, ppu }
-    }
-
-    /// load [iNES](http://wiki.nesdev.com/w/index.php/INES)
-    fn load_ram(path: &Path) -> (PrgRam, Arc<Mutex<VRam>>) {
-        let file = match File::open(path) {
-            Ok(file) => file,
-            Err(why) => panic!("{}: path is {:?}", why, path),
-        };
-        let mut buffer = BufReader::new(file);
-        let mut i_nes_data: Vec<u8> = Vec::new();
-        let _ = buffer.read_to_end(&mut i_nes_data).unwrap();
-
-        let prg_rom_start = Self::I_NES_HEADER_SIZE;
-        let prg_rom_end = prg_rom_start +
-            i_nes_data[Self::COUNT_OF_PRG_ROM_UNITS_INDEX as usize] as u16 * Self::SIZE_OF_PRG_ROM_UNIT - 1;
-
-        let chr_rom_banks_num = i_nes_data[Self::COUNT_OF_CHR_ROM_UNITS_INDEX as usize];
-        let chr_rom_start = prg_rom_end + 1;
-        let chr_rom_end = chr_rom_start + chr_rom_banks_num as u16 * Self::SIZE_OF_CHR_ROM_UNIT - 1;
-
-        // set prg_ram_memory
-        let mut prg_rom: Vec<u8> = Vec::new();
-        prg_rom.extend_from_slice(
-            &i_nes_data[(prg_rom_start as usize)..(prg_rom_end as usize + 1)],
-        );
-
-        let mut prg_ram_memory: Box<[u8; Self::RAM_SIZE]> = Box::new([0; Self::RAM_SIZE]);
-        prg_ram_memory[Self::PRG_ROM_LOWER_IDX..Self::PRG_ROM_UPPER_IDX]
-            .clone_from_slice(&prg_rom[..(Self::SIZE_OF_PRG_ROM_UNIT as usize)]);
-
-        match i_nes_data[Self::COUNT_OF_PRG_ROM_UNITS_INDEX as usize] {
-            1 => {
-                prg_ram_memory[Self::PRG_ROM_UPPER_IDX..].clone_from_slice(
-                    &prg_rom[..(Self::SIZE_OF_PRG_ROM_UNIT as usize)],
-                );
-
-            }
-            2...255 => {
-                prg_ram_memory[Self::PRG_ROM_UPPER_IDX..].clone_from_slice(
-                    &prg_rom[(Self::SIZE_OF_PRG_ROM_UNIT as usize)..(Self::SIZE_OF_PRG_ROM_UNIT as usize * 2)],
-                );
-            }
-            _ => {}
-        }
-
-        // set v_ram_memory
-        let mut v_ram_memory: Box<[u8; Self::RAM_SIZE]> = Box::new([0; Self::RAM_SIZE]);
-        v_ram_memory[..(chr_rom_end as usize + 1 - chr_rom_start as usize)].clone_from_slice(
-            &i_nes_data[(chr_rom_start as usize)..(chr_rom_end as usize + 1)],
-        );
-
-        let v_ram = Arc::new(Mutex::new(VRam::new(v_ram_memory)));
-        let prg_ram = PrgRam::new(prg_ram_memory, v_ram.clone());
-
-        (prg_ram, v_ram)
-    }
-}
-
-```
-`load_ram` method is today's main topic.
-1. Parse an iNES format file.
-2. Check the header.
-  - 4th Byte in the header means count of PRG ROM *units*.
-      - A PRG ROM unit is 16KB.
-  - 5th Byte in the header means count of CHR ROM *units*.
-      - A CHR ROM unit is 8KB.
-3. Load PRG ROM data to PrgRam.
-4. Load CHR ROM data to VRam.
-
-## dump
-Dump PrgRam and VRam to check they store data.
-```rust
-// src/nes/cpu/mod.rs
 impl Cpu {
-    #[allow(dead_code)]
-    pub fn dump(&self) {
-        self.prg_ram.dump();
+    fn increment_pc(&mut self) {
+        self.pc = self.pc + 1;
     }
 }
+```
+## parse the instruction
+Parsing the instruction is bit more complex. We have to know [OperationCode(OpCode)](http://wiki.nesdev.com/w/index.php/6502_instructions), [AddressingMode](http://wiki.nesdev.com/w/index.php/CPU_addressing_modes) and [IndexRegister](http://wiki.nesdev.com/w/index.php/CPU_registers).
 
-impl PrgRam {
-    pub fn dump(&self) {
-        let dump_file = "prg_ram.dump";
-        let mut f = BufWriter::new(File::create(dump_file).unwrap());
-        for v in self.memory.iter() {
-            f.write(&[*v]).unwrap();
-        }
-    }
+An instruction identify a set of OpCode, AddressingMode and IndexRegister.([ref](http://wiki.nesdev.com/w/index.php/CPU_unofficial_opcodes))
+
+These are list of OpCode, AddressingMode, and IndexRegister.
+
+`src/nes/cpu/mod.rs`
+```rust
+#[derive(Debug)]
+/// [OperationCode](http://wiki.nesdev.com/w/index.php/6502_instructions)
+enum OpCode {
+    ADC,
+    SBC,
+    AND,
+    ORA,
+    EOR,
+    ASL,
+    LSR,
+    ROL,
+    ROR,
+    BCC,
+    BCS,
+    BEQ,
+    BNE,
+    BVC,
+    BVS,
+    BPL,
+    BMI,
+    BIT,
+    JMP,
+    JSR,
+    RTS,
+    BRK,
+    RTI,
+    CMP,
+    CPX,
+    CPY,
+    INC,
+    DEC,
+    INX,
+    DEX,
+    INY,
+    DEY,
+    CLC,
+    SEC,
+    CLI,
+    SEI,
+    CLD,
+    SED,
+    CLV,
+    LDA,
+    LDX,
+    LDY,
+    STA,
+    STX,
+    STY,
+    TAX,
+    TXA,
+    TAY,
+    TYA,
+    TSX,
+    TXS,
+    PHA,
+    PLA,
+    PHP,
+    PLP,
+    NOP,
 }
 
-
-// src/nes/ppu/mod.rs
-impl Ppu {
-    #[allow(dead_code)]
-    pub fn dump(&self) {
-        self.v_ram.lock().unwrap().dump();
-    }
+#[derive(Debug)]
+/// [AddressingMode](http://wiki.nesdev.com/w/index.php/CPU_addressing_modes<Paste>)
+enum AddressingMode {
+    Accumulator,
+    Immediate,
+    Absolute,
+    ZeroPage,
+    IndexedZeroPage,
+    IndexedAbsolute,
+    Implied,
+    Relative,
+    IndexedIndirect,
+    IndirectIndexed,
+    AbsoluteIndirect,
 }
 
-impl VRam {
-    fn dump(&self) {
-        let dump_file = "v_ram.dump";
-        let mut f = BufWriter::new(File::create(dump_file).unwrap());
-        for v in self.0.iter() {
-            f.write(&[*v]).unwrap();
-        }
-    }
+#[derive(Debug)]
+enum IndexRegister {
+    X,
+    Y,
 }
 
+```
+
+Let's start below.
+
+```rust
+// Cargo.toml
+[dependencies]
+error-chain = "0.11.0"
 
 // src/nes/mod.rs
-    pub fn new(casette_name: &str) -> Nes {
-       // load iNES
-
-        #[cfg(feature = "dump")] cpu.dump();
-        ppu.dump();
-
-        Nes { cpu, ppu }
-    }
-
-
-// src/main.rs
-extern crate nes;
-
-use nes::nes::Nes;
-
-fn main() {
-    let _nes = Nes::new("sample1.nes");
+impl Nes {
+  pub fn run(mut self) {
+    self.cpu.run();
+  }
 }
 
+// src/nes/cpu/mod.rs
+use errors::*;
 
-// Cargo.toml
-[features]
-dump = []
+impl Cpu {
+  pub fn new(prg_ram: PrgRam) -> Cpu {
+    Cpu {
+      pc: 0x8000,
+      prg_ram,
+    }
+  }
+
+  pub fn run(mut self) {
+    loop {
+      let instruction = self.fetch_instruction();
+      match Self::parse_instruction(instruction) {
+        Ok((op_code, addressing_mode, register)) => {
+          self.increment_pc();
+        }
+        Err(error_message) => {
+          panic!("{}, at: {:0x}, cpu_dump: {:?}", error_message, self.pc, self);
+        }
+      }
+    }
+  }
+
+  fn fetch_instruction(&self) -> u8 {
+    self.prg_ram_value()
+  }
+
+  fn parse_instruction(instruction: u8,) -> Result<(OpCode, AddressingMode, Option<IndexRegister>)> {
+      let (op_code, addressing_mode, register): (OpCode,
+						 AddressingMode,
+						 Option<IndexRegister>) = match instruction {
+	  _ => Err(format!("unknown instruction: {:0x}", instruction,))?,
+      };
+      Ok((op_code, addressing_mode, register))
+  }
+
+  impl fmt::Debug for Cpu {
+      fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+          write!(f, "A:{:0x}, PC:{:0x}", self.pc)
+      }
+  }
+}
+
 ```
-Sample iNES file is [here](http://hp.vector.co.jp/authors/VA042397/nes/sample.html)(Download from a first link).
+If you run `cargo run`, you get `panicked at 'unknown instruction: 78, at: 8000, cpu_dump: A:0, X:0, Y:0, PC:8000'`.
+It means instruction is 78, but you have not implemented yet. So, you have to implement all instructions.
 
-Unzip the file and put `sample1.nes` at `cassette/`.
+I suggest using [cargo watch](https://github.com/passcod/cargo-watch), to implemnt instructions.
+```rust
+// src/nes/mod.rs
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn run_test() {
+        let mut nes = Nes::new("sample1.nes");
+        nes.run();
+    }
+}
+```
+`cargo watch -x test` watch source code change and run compile and test automatically. If you implement instruction 78, test run and you get `unknown instruction: a2, at: 8001, cpu_dump: PC:8001'` because next instruction is `a2`.
 
-After `cargo run --features dump`, you can check `prg_ram.dump` and `v_ram.dump` using hex editor such as [0xED](http://www.suavetech.com/0xed/) and [hexedit](https://sourceforge.net/projects/hexedit/).
 
-
-Whole source code is available [here](https://github.com/bon-chi/nes/tree/load-iNES-file).
+Whole source code is available [here](https://github.com/bon-chi/nes/tree/go-through-instructions-1).
