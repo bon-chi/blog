@@ -14,11 +14,34 @@
             
         </url>
     
+        <url>
+            <loc>https://bon-chi.github.io/blog/x86-emulator-in-ubuntu-01/</loc>
+            
+                <lastmod>2018-05-27</lastmod>
+            
+        </url>
+    
     
         <url>
             <loc>https://bon-chi.github.io/blog/</loc>
         </url>
     
     
+        <url>
+            <loc>https://bon-chi.github.io/blog/categories/</loc>
+        </url>
+    
+    
+        <url>
+            <loc>https://bon-chi.github.io/blog/tags/</loc>
+        </url>
+    
+        <url>
+            <loc>https://bon-chi.github.io/blog/tags/nes/</loc>
+        </url>
+    
+        <url>
+            <loc>https://bon-chi.github.io/blog/tags/x86-emulator/</loc>
+        </url>
     
 </urlset>

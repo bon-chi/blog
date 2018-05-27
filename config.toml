@@ -15,8 +15,6 @@ highlight_code = true
 
 insert_anchor_links = true
 
-sort_by = "date"
-
 [extra]
 hyde_theme = "theme-base-0c"
 # Put all your custom variables here

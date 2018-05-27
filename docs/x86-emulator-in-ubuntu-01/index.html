@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+      <meta http-equiv="X-UA-Compatible" content="IE=edge">
+      <meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+      <!-- Enable responsiveness on mobile devices-->
+      <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+
+      <title>bon-chi</title>
+
+      <!-- CSS -->
+      <link rel="stylesheet" href="https:&#x2F;&#x2F;bon-chi.github.io&#x2F;blog&#x2F;print.css" media="print">
+      <link rel="stylesheet" href="https:&#x2F;&#x2F;bon-chi.github.io&#x2F;blog&#x2F;poole.css">
+      <link rel="stylesheet" href="https:&#x2F;&#x2F;bon-chi.github.io&#x2F;blog&#x2F;hyde.css">
+      <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=PT+Sans:400,400italic,700|Abril+Fatface">
+
+      
+
+      
+      
+    </head>
+
+    <body class="theme-base-0c ">
+        
+            <div class="sidebar">
+                <div class="container sidebar-sticky">
+                    <div class="sidebar-about">
+                        
+                            <a href="https:&#x2F;&#x2F;bon-chi.github.io&#x2F;blog&#x2F;"><h1>bon-chi</h1></a>
+                            
+                            <p class="lead">bon-chi&#x27;s web log</p>
+                            
+                        
+                    </div>
+
+                    <ul class="sidebar-nav">
+                        
+                        
+                        
+                    </ul>
+                </div>
+            </div>
+        
+
+        <div class="content container">
+            
+<div class="post">
+  <h1 class="post-title">自作エミュレータで学ぶx86アーキテクチャコンピュータが動く仕組みを徹底理解！をubuntuで進める</h1>
+  <span class="post-date">2018-05-27</span>
+  <ul>
+    
+        <li>
+            <a href="https://bon-chi.github.io/blog/x86-emulator-in-ubuntu-01/#chapter1">Chapter1</a>
+            
+                <ul>
+                    
+                        <li>
+                            <a href="https://bon-chi.github.io/blog/x86-emulator-in-ubuntu-01/#1-3">1.3</a>
+                        </li>
+                    
+                </ul>
+            
+        </li>
+    
+        <li>
+            <a href="https://bon-chi.github.io/blog/x86-emulator-in-ubuntu-01/#chapter2">Chapter2</a>
+            
+                <ul>
+                    
+                        <li>
+                            <a href="https://bon-chi.github.io/blog/x86-emulator-in-ubuntu-01/#2-3">2.3</a>
+                        </li>
+                    
+                </ul>
+            
+        </li>
+    
+        <li>
+            <a href="https://bon-chi.github.io/blog/x86-emulator-in-ubuntu-01/#chapter3">Chapter3</a>
+            
+                <ul>
+                    
+                        <li>
+                            <a href="https://bon-chi.github.io/blog/x86-emulator-in-ubuntu-01/#3-2-3-4">3.2, 3.4</a>
+                        </li>
+                    
+                </ul>
+            
+        </li>
+    
+  </ul>
+  <p>OS: ubuntu16.04
+gcc: (Ubuntu/Linaro 6.3.0-18ubuntu2~16.04) 6.3.0 20170519</p>
+<h2 id="chapter1"><a class="gutenberg-anchor" href="#chapter1" aria-label="Anchor link for: chapter1">🔗</a>
+Chapter1</h2>
+<h3 id="1-3"><a class="gutenberg-anchor" href="#1-3" aria-label="Anchor link for: 1-3">🔗</a>
+1.3</h3>
+<p>gccコマンドは以下</p>
+<pre><code>gcc -Wl,--entry=func,--oformat=binary -nostdlib -fno-asynchronous-unwind-tables -m32 -o casm-c-sample.bin casm-c-sample.c
+</code></pre>
+<p>ndisasmはapt-getでnasmをinstallすると一緒に入ってくる</p>
+<pre><code>sudo apt-get install nasm
+</code></pre>
+<h2 id="chapter2"><a class="gutenberg-anchor" href="#chapter2" aria-label="Anchor link for: chapter2">🔗</a>
+Chapter2</h2>
+<h3 id="2-3"><a class="gutenberg-anchor" href="#2-3" aria-label="Anchor link for: 2-3">🔗</a>
+2.3</h3>
+<p><code>emu2.3</code>のMakefileを修正する必要がある</p>
+<ul>
+<li><code>TARGET</code>は<code>.exe</code>である必要がないので、<code>TARGET = px86</code></li>
+<li><code>CC</code>でコンパイルに利用するgccを指定している。書籍だとサンプルコード内にあるgccを使うがそれはwindow用なので、ubuntuにinstallされているgccを使う。<code>CC = gcc</code></li>
+<li><code>CC</code>で<code>Z_TOOLS</code>を参照しなくなったので、<code>Z_TOOLS</code>を削除する</li>
+</ul>
+<p>最終的に<code>Makefile</code>は以下のようになる</p>
+<pre><code>TARGET = px86
+OBJS = main.o
+
+CC = gcc
+CFLAGS += -Wall
+
+.PHONY: all
+all :
+    make $(TARGET)
+
+%.o : %.c Makefile
+    $(CC) $(CFLAGS) -c $&lt;
+
+$(TARGET) : $(OBJS) Makefile
+    $(CC) -o $@ $(OBJS)
+</code></pre>
+<h2 id="chapter3"><a class="gutenberg-anchor" href="#chapter3" aria-label="Anchor link for: chapter3">🔗</a>
+Chapter3</h2>
+<h3 id="3-2-3-4"><a class="gutenberg-anchor" href="#3-2-3-4" aria-label="Anchor link for: 3-2-3-4">🔗</a>
+3.2, 3.4</h3>
+<p><code>Makefile</code>をChapter2と同様に修正する</p>
+
+</div>
+
+        </div>
+
+    </body>
+
+</html>
