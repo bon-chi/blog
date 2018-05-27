@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+      <meta http-equiv="X-UA-Compatible" content="IE=edge">
+      <meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+      <!-- Enable responsiveness on mobile devices-->
+      <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+
+      <title>bon-chi</title>
+
+      <!-- CSS -->
+      <link rel="stylesheet" href="https:&#x2F;&#x2F;bon-chi.github.io&#x2F;blog&#x2F;print.css" media="print">
+      <link rel="stylesheet" href="https:&#x2F;&#x2F;bon-chi.github.io&#x2F;blog&#x2F;poole.css">
+      <link rel="stylesheet" href="https:&#x2F;&#x2F;bon-chi.github.io&#x2F;blog&#x2F;hyde.css">
+      <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=PT+Sans:400,400italic,700|Abril+Fatface">
+
+      
+
+      
+      
+    </head>
+
+    <body class="theme-base-0c ">
+        
+            <div class="sidebar">
+                <div class="container sidebar-sticky">
+                    <div class="sidebar-about">
+                        
+                            <a href="https:&#x2F;&#x2F;bon-chi.github.io&#x2F;blog&#x2F;"><h1>bon-chi</h1></a>
+                            
+                            <p class="lead">bon-chi&#x27;s web log</p>
+                            
+                        
+                    </div>
+
+                    <ul class="sidebar-nav">
+                        
+                        
+                        
+                    </ul>
+                </div>
+            </div>
+        
+
+        <div class="content container">
+            
+<div class="post">
+  <h1 class="post-title">自作エミュレータで学ぶx86アーキテクチャコンピュータが動く仕組みを徹底理解！をrustで進める: 3章</h1>
+  <span class="post-date">2018-05-28</span>
+  <ul>
+    
+        <li>
+            <a href="https://bon-chi.github.io/blog/x86-emulator-in-rust-02/#chapter3">Chapter3</a>
+            
+                <ul>
+                    
+                        <li>
+                            <a href="https://bon-chi.github.io/blog/x86-emulator-in-rust-02/#3-2">3.2</a>
+                        </li>
+                    
+                        <li>
+                            <a href="https://bon-chi.github.io/blog/x86-emulator-in-rust-02/#3-4">3.4</a>
+                        </li>
+                    
+                </ul>
+            
+        </li>
+    
+  </ul>
+  <h2 id="chapter3"><a class="gutenberg-anchor" href="#chapter3" aria-label="Anchor link for: chapter3">🔗</a>
+Chapter3</h2>
+<h3 id="3-2"><a class="gutenberg-anchor" href="#3-2" aria-label="Anchor link for: 3-2">🔗</a>
+3.2</h3>
+<p>サンプルコードと同じように修正する。<code>near_jump</code>命令だけ<a href="https://bon-chi.github.io/blog/x86-emulator-in-rust-01/">short_jumpのときと同様に</a>符号付き即値を考慮する必要がある。</p>
+<pre><code>impl Emulator {
+    fn near_jump(&amp;mut self) {
+        let diff = self.get_sign_code32(1) + 5;
+        match diff &gt; 0 {
+            true =&gt; {
+                self.eip += diff as u32;
+            }
+            false =&gt; {
+                self.eip -= diff.abs() as u32;
+            }
+        }
+    }
+}
+</code></pre>
+<p>commitは<a href="https://github.com/bon-chi/rust_emu/commit/2d73e48f17d4a7ab1a132a95f7f983eda641d80a">こちら</a></p>
+<h3 id="3-4"><a class="gutenberg-anchor" href="#3-4" aria-label="Anchor link for: 3-4">🔗</a>
+3.4</h3>
+<h4 id="moziyuruhua"><a class="gutenberg-anchor" href="#moziyuruhua" aria-label="Anchor link for: moziyuruhua">🔗</a>
+モジュール化</h4>
+<p>今後の拡張に備えて1ファイルに書いていたコードをモジュール化する。サンプルコードでは<code>.h</code>ファイルに分けているのをTraitに分けることにする。実装はサンプルコードでは各<code>.c</code>ファイルに分かれているが、<code>src/emulator/mod.rs</code>にまとまる。
+commitは<a href="https://github.com/bon-chi/rust_emu/commit/2c4922495ae8315a4744ff28a6f2dc2e06132a1c%3CPaste%3E">こちら</a></p>
+<h4 id="modr-mnoshi-zhuang"><a class="gutenberg-anchor" href="#modr-mnoshi-zhuang" aria-label="Anchor link for: modr-mnoshi-zhuang">🔗</a>
+ModR/Mの実装</h4>
+<p>ModR/Mを実装するのにサンプルコードでは<code>union</code>を使っている。RustもC-likeなunionを使える。</p>
+<pre><code>#[repr(C)]
+pub union Reg {
+    pub opecode: u8,
+    pub reg_index: u8,
+}
+
+#[repr(C)]
+pub union Disp {
+    pub disp8: i8,
+    pub disp32: u32,
+}
+
+</code></pre>
+<p>ただし、値を取得する際は<code>unsafe</code>ブロックで囲う必要がある</p>
+<p>commitは<a href="https://github.com/bon-chi/rust_emu/commit/07bd3ac9c3a574bb9a0f70e170ed476278f53b56">こちら</a></p>
+
+</div>
+
+        </div>
+
+    </body>
+
+</html>
