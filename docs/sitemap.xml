@@ -15,6 +15,13 @@
         </url>
     
         <url>
+            <loc>https://bon-chi.github.io/blog/x86-emulator-in-rust-01/</loc>
+            
+                <lastmod>2018-05-27</lastmod>
+            
+        </url>
+    
+        <url>
             <loc>https://bon-chi.github.io/blog/x86-emulator-in-ubuntu-01/</loc>
             
                 <lastmod>2018-05-27</lastmod>
