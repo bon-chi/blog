@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+      <meta http-equiv="X-UA-Compatible" content="IE=edge">
+      <meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+      <!-- Enable responsiveness on mobile devices-->
+      <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+
+      <title>bon-chi</title>
+
+      <!-- CSS -->
+      <link rel="stylesheet" href="https:&#x2F;&#x2F;bon-chi.github.io&#x2F;blog&#x2F;print.css" media="print">
+      <link rel="stylesheet" href="https:&#x2F;&#x2F;bon-chi.github.io&#x2F;blog&#x2F;poole.css">
+      <link rel="stylesheet" href="https:&#x2F;&#x2F;bon-chi.github.io&#x2F;blog&#x2F;hyde.css">
+      <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=PT+Sans:400,400italic,700|Abril+Fatface">
+
+      
+
+      
+      
+    </head>
+
+    <body class="theme-base-0c ">
+        
+            <div class="sidebar">
+                <div class="container sidebar-sticky">
+                    <div class="sidebar-about">
+                        
+                            <a href="https:&#x2F;&#x2F;bon-chi.github.io&#x2F;blog&#x2F;"><h1>bon-chi</h1></a>
+                            
+                            <p class="lead">bon-chi&#x27;s web log</p>
+                            
+                        
+                    </div>
+
+                    <ul class="sidebar-nav">
+                        
+                        
+                        
+                    </ul>
+                </div>
+            </div>
+        
+
+        <div class="content container">
+            
+<div class="post">
+  <h1 class="post-title">自作エミュレータで学ぶx86アーキテクチャコンピュータが動く仕組みを徹底理解！をrustで進める: 2章</h1>
+  <span class="post-date">2018-05-27</span>
+  <ul>
+    
+        <li>
+            <a href="https://bon-chi.github.io/blog/x86-emulator-in-rust-01/#chapter2">Chapter2</a>
+            
+                <ul>
+                    
+                        <li>
+                            <a href="https://bon-chi.github.io/blog/x86-emulator-in-rust-01/#2-3">2.3</a>
+                        </li>
+                    
+                </ul>
+            
+        </li>
+    
+  </ul>
+  <h2 id="chapter2"><a class="gutenberg-anchor" href="#chapter2" aria-label="Anchor link for: chapter2">🔗</a>
+Chapter2</h2>
+<h3 id="2-3"><a class="gutenberg-anchor" href="#2-3" aria-label="Anchor link for: 2-3">🔗</a>
+2.3</h3>
+<p>Emulator Structを作ってそこにメソッドを生やしていく。基本的にはサンプルコードをシンプルに真似るだけで良いが、<code>short_jump</code>命令は符号付きの即値をeip(命令ポインタ: 符号なし)に加算する箇所だけ、即値の正負を判定して、絶対値をとってから加算/減算を行う必要がある。</p>
+<pre><code>impl Emulator {
+    fn short_jump(&amp;mut self) {
+        let diff: i8 = self.get_sign_code8(1) + 2;
+        match diff &gt; 0 {
+            true =&gt; {
+                self.eip += diff as u32;
+            }
+            false =&gt; {
+                self.eip -= diff.abs() as u32;
+            }
+        }
+    }
+}
+</code></pre>
+<p>i8型のdiffをそのままu32にキャストしても、diffが負数の場合はCのサンプルと同じ挙動にはならない</p>
+<p>コードは<a href="https://github.com/bon-chi/rust_emu/tree/emu2.3">こちら</a></p>
+
+</div>
+
+        </div>
+
+    </body>
+
+</html>
