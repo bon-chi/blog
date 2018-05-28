@@ -85,6 +85,10 @@
                             <a href="https://bon-chi.github.io/blog/x86-emulator-in-ubuntu-01/#3-2-3-4">3.2, 3.4</a>
                         </li>
                     
+                        <li>
+                            <a href="https://bon-chi.github.io/blog/x86-emulator-in-ubuntu-01/#3-7">3.7</a>
+                        </li>
+                    
                 </ul>
             
         </li>
@@ -134,6 +138,35 @@ Chapter3</h2>
 <h3 id="3-2-3-4"><a class="gutenberg-anchor" href="#3-2-3-4" aria-label="Anchor link for: 3-2-3-4">🔗</a>
 3.2, 3.4</h3>
 <p><code>Makefile</code>をChapter2と同様に修正する</p>
+<h3 id="3-7"><a class="gutenberg-anchor" href="#3-7" aria-label="Anchor link for: 3-7">🔗</a>
+3.7</h3>
+<p><code>emu3.7</code>のエミュレーターは<code>Makefile</code>をこれまで同様に修正すれば問題ないが、<code>exec-c-test</code>と<code>exec-arg-test</code>の<code>Makefile</code>はそのままではコンパイルできない。<code>CFLAGS</code>に<code>-m32</code>オプションを追加し、<code>LDFLAGS</code>に<code>-m elf_i386</code>オプションを追加する必要がある。
+以下の様な<code>Makefile</code>になる</p>
+<pre><code>TARGET = test.bin
+OBJS = crt0.o test.o
+Z_TOOLS = ../z_tools
+
+CC = gcc
+LD = ld
+AS = nasm
+CFLAGS += -nostdlib -fno-asynchronous-unwind-tables \
+    -I$(Z_TOOLS)/i386-elf-gcc/include -g -fno-stack-protector -m32
+LDFLAGS += --entry=start --oformat=binary -Ttext 0x7c00 -m elf_i386
+
+.PHONY: all
+all :
+    make $(TARGET)
+
+%.o : %.c Makefile
+    $(CC) $(CFLAGS) -c $&lt;
+
+%.o : %.asm Makefile
+    $(AS) -f elf $&lt;
+
+$(TARGET) : $(OBJS) Makefile
+    $(LD) $(LDFLAGS) -o $@ $(OBJS)
+</code></pre>
+<p>また、リスト3.29まで実装した段階で<code>exec-c-test</code>を試そうとすると、<code>add_rm32_imm8</code>が未実装のため<code>test.bin</code>が最後まで完走できない。<code>add_rm32_imm8</code>はリスト3.34で実装するので問題はないが、書籍の環境ではこの時点で<code>add_rm32_imm8</code>が必要だったかどうかはわからない。もしかしたら<code>inc_rm32</code>が使われていたのが、gccのバージョンが変わったせいで<code>add_rm32_imm8</code>が使われるようになったのかもしれないが、そこまでは確認していない。</p>
 
 </div>
 
