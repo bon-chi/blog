@@ -96,7 +96,7 @@ gcc: (Ubuntu/Linaro 6.3.0-18ubuntu2~16.04) 6.3.0 20170519</p>
 Chapter1</h2>
 <h3 id="1-3"><a class="gutenberg-anchor" href="#1-3" aria-label="Anchor link for: 1-3">🔗</a>
 1.3</h3>
-<p>gccコマンドは以下</p>
+<p>gccコマンドは以下。<code>-m32</code> で32bitバイナリにコンパイルされる</p>
 <pre><code>gcc -Wl,--entry=func,--oformat=binary -nostdlib -fno-asynchronous-unwind-tables -m32 -o casm-c-sample.bin casm-c-sample.c
 </code></pre>
 <p>ndisasmはapt-getでnasmをinstallすると一緒に入ってくる</p>
