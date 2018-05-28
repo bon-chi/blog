@@ -53,4 +53,33 @@ $(TARGET) : $(OBJS) Makefile
 ### 3.2, 3.4
 `Makefile`をChapter2と同様に修正する
 
+### 3.7
+`emu3.7`のエミュレーターは`Makefile`をこれまで同様に修正すれば問題ないが、`exec-c-test`と`exec-arg-test`の`Makefile`はそのままではコンパイルできない。`CFLAGS`に`-m32`オプションを追加し、`LDFLAGS`に`-m elf_i386`オプションを追加する必要がある。
+以下の様な`Makefile`になる
+~~~
+TARGET = test.bin
+OBJS = crt0.o test.o
+Z_TOOLS = ../z_tools
 
+CC = gcc
+LD = ld
+AS = nasm
+CFLAGS += -nostdlib -fno-asynchronous-unwind-tables \
+	-I$(Z_TOOLS)/i386-elf-gcc/include -g -fno-stack-protector -m32
+LDFLAGS += --entry=start --oformat=binary -Ttext 0x7c00 -m elf_i386
+
+.PHONY: all
+all :
+	make $(TARGET)
+
+%.o : %.c Makefile
+	$(CC) $(CFLAGS) -c $<
+
+%.o : %.asm Makefile
+	$(AS) -f elf $<
+
+$(TARGET) : $(OBJS) Makefile
+	$(LD) $(LDFLAGS) -o $@ $(OBJS)
+~~~
+
+また、リスト3.29まで実装した段階で`exec-c-test`を試そうとすると、`add_rm32_imm8`が未実装のため`test.bin`が最後まで完走できない。`add_rm32_imm8`はリスト3.34で実装するので問題はないが、書籍の環境ではこの時点で`add_rm32_imm8`が必要だったかどうかはわからない。もしかしたら`inc_rm32`が使われていたのが、gccのバージョンが変わったせいで`add_rm32_imm8`が使われるようになったのかもしれないが、そこまでは確認していない。
