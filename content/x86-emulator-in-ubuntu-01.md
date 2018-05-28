@@ -12,7 +12,7 @@ gcc: (Ubuntu/Linaro 6.3.0-18ubuntu2~16.04) 6.3.0 20170519
 
 ## Chapter1
 ### 1.3
-gccコマンドは以下
+gccコマンドは以下。`-m32` で32bitバイナリにコンパイルされる
 ~~~
 gcc -Wl,--entry=func,--oformat=binary -nostdlib -fno-asynchronous-unwind-tables -m32 -o casm-c-sample.bin casm-c-sample.c
 ~~~
