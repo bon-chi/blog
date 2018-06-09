@@ -50,7 +50,7 @@ $(TARGET) : $(OBJS) Makefile
 
 
 ## Chapter3
-### 3.2, 3.4
+### 3.2, 3.4, 3.7, 3.10, 3.12
 `Makefile`をChapter2と同様に修正する
 
 
